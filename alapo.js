@@ -67,7 +67,8 @@ function ScoreMove(move){
     var captured = g_board[to] & 0x7;
     var score = materialTable[captured];
     var row = to & 0xF0;
-    if ((row == 0x20) || (row == 0x70)) score += 1000;
+    if ((row == 0x20) && ((g_toMove == colorWhite) || (score > 0))) score += 1000;
+    if ((row == 0x70) && ((g_toMove != colorWhite) || (score > 0))) score += 1000;
     return score;
 }
 
