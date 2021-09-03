@@ -59,8 +59,6 @@ function App() {
 let app = new App();
 
 let init = function(app) {
-    console.log('INIT');
-    logger.info('INIT');
     app.state = STATE.WAIT;
     axios.post(SERVICE + '/api/auth/login', {
         username: USERNAME,
