@@ -98,7 +98,7 @@ let recovery = function(app) {
 
 let checkTurn = function(app) {
     app.state = STATE.WAIT;
-    axios.get(SERVICE + '/api/session/current', {
+    axios.get(SERVICE + '/api/session/current/134', {
         headers: { Authorization: `Bearer ${TOKEN}` }
     })
     .then(function (response) {
