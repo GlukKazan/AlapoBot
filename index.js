@@ -8,7 +8,6 @@ const STATE = {
     INIT: 1,
     TURN: 2,
     RECO: 3,
-    GETM: 4,
     MOVE: 5,
     STOP: 6
 };
@@ -87,27 +86,11 @@ let recovery = function(app) {
     .then(function (response) {
         console.log(response.data);
         uid = response.data.uid;
-        app.state = STATE.GETM;
+        app.state = STATE.MOVE;
     })
     .catch(function (error) {
         console.log('RECO ERROR: ' + error);
         logger.error('RECO ERROR: ' + error);
-        app.state  = STATE.INIT;
-    });
-    return true;
-}
-
-let getConfirmed = function(app) {
-    app.state = STATE.WAIT;
-    axios.get(SERVICE + '/api/move/confirmed/' + uid, {
-        headers: { Authorization: `Bearer ${TOKEN}` }
-    })
-    .then(function (response) {
-        app.state = STATE.MOVE;
-    })
-    .catch(function (error) {
-        console.log('GETM ERROR: ' + error);
-        logger.error('GETM ERROR: ' + error);
         app.state  = STATE.INIT;
     });
     return true;
@@ -211,7 +194,6 @@ app.states[STATE.STOP] = stop;
 app.states[STATE.TURN] = checkTurn;
 app.states[STATE.MOVE] = sendMove;
 app.states[STATE.RECO] = recovery;
-app.states[STATE.GETM] = getConfirmed;
 
 let run = function() {
     if (app.exec()) {
