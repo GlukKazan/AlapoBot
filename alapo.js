@@ -3,34 +3,6 @@
 var g_width  = 6;
 var g_height = 6;
 
-function GetFen(){
-    var result = "";
-    for (var row = 0; row < g_height; row++) {
-        if (row != 0) 
-            result += '/';
-        var empty = 0;
-        for (var col = 0; col < g_width; col++) {
-            var piece = g_board[((row + 2) << 4) + col + 4];
-            if (piece == 0) {
-                empty++;
-            }
-            else {
-                if (empty != 0) 
-                    result += empty;
-                empty = 0;
-                
-                var pieceChar = [" ", "f", "w", "k", "b", "r", "q", " "][(piece & 0x7)];
-                result += ((piece & colorWhite) != 0) ? pieceChar.toUpperCase() : pieceChar;
-            }
-        }
-        if (empty != 0) {
-            result += empty;
-        }
-    }
-    result += g_toMove == colorWhite ? " w" : " b";
-    return result;
-}
-
 function FormatSquare(square) {
     var letters = ['a', 'b', 'c', 'd', 'e', 'f'];
     return letters[(square & 0xF) - 4] + (((g_height + 1) - (square >> 4)) + 1);
@@ -53,10 +25,7 @@ function Search(finishMoveCallback) {
          }
     }
     if (finishMoveCallback != null) {
-        MakeMove(bestMove);
-        var curFen = GetFen();
-        UnmakeMove(bestMove);
-        finishMoveCallback(bestMove, curFen, bestScore);
+        finishMoveCallback(bestMove, bestScore);
     }
 }
 
@@ -86,9 +55,6 @@ var pieceQueen  = 0x06;
 var g_board = new Array(256);
 var g_toMove;
 
-var g_moveCount = 0;
-var g_moveUndoStack = new Array();
-
 function MakeSquare(row, column) {
     return ((row + 2) << 4) | (column + 4);
 }
@@ -113,7 +79,7 @@ function InitializeFromFen(fen) {
         else {
             if (c >= '0' && c <= '9') {
                 for (var j = 0; j < parseInt(c); j++) {
-                    g_board[MakeSquare(row, col)] = 0;
+                    g_board[MakeSquare(row, col)] = pieceEmpty;
                     col++;
                 }
             }
@@ -151,36 +117,6 @@ function InitializeFromFen(fen) {
     
     g_toMove = chunks[1].charAt(0) == 'w' ? colorWhite : 0;
     return '';
-}
-
-function MakeMove(move){
-	var otherColor = 8 - g_toMove; 
-    
-    var to = (move >> 8) & 0xFF;
-    var from = move & 0xFF;
-    var captured = g_board[to];
-
-    g_moveUndoStack[g_moveCount] = new UndoHistory(captured);
-    g_moveCount++;
-
-    g_board[to] = g_board[from];
-    g_board[from] = pieceEmpty;
-
-    g_toMove = otherColor;
-    return true;
-}
-
-function UnmakeMove(move){
-    g_toMove = 8 - g_toMove;
-    
-    g_moveCount--;
-    var captured = g_moveUndoStack[g_moveCount].captured;
-
-    var to = (move >> 8) & 0xFF;
-    var from = move & 0xFF;
-    
-    g_board[from] = g_board[to];
-    g_board[to] = captured;
 }
 
 function GenerateMove(moveStack, from, to) {
@@ -257,10 +193,6 @@ function GenerateAllMoves(moveStack) {
              }
         }
     }
-}
-
-function UndoHistory(captured) {
-    this.captured = captured;
 }
 
 function FindMove(fen, callback) {

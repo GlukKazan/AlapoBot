@@ -8,8 +8,8 @@ const STATE = {
     INIT: 1,
     TURN: 2,
     RECO: 3,
-    MOVE: 5,
-    STOP: 6
+    MOVE: 4,
+    STOP: 5
 };
 
 const SERVICE  = 'http://127.0.0.1:3000';
@@ -118,17 +118,7 @@ let checkTurn = function(app) {
     return true;
 }
 
-function getSetup(fen) {
-    let r = '?turn=';
-    if (turn == 0) {
-        r += '1;&setup=' + fen;
-    } else {
-        r += '0;&setup=' + fen;
-    }
-    return r;
-}
-
-function FinishTurnCallback(bestMove, fen, value) {
+function FinishTurnCallback(bestMove, value) {
     if (bestMove != null) {
         let move = garbo.FormatMove(bestMove);
         const result = setup.match(/[?&]turn=(\d+)/);
@@ -142,7 +132,6 @@ function FinishTurnCallback(bestMove, fen, value) {
             uid: uid,
             next_player: (turn == 0) ? 2 : 1,
             move_str: move,
-            setup_str: getSetup(fen),
             note: 'value=' + value
         }, {
             headers: { Authorization: `Bearer ${TOKEN}` }
