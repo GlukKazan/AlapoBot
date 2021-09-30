@@ -103,7 +103,8 @@ let recovery = function(app) {
     app.state = STATE.WAIT;
     axios.post(SERVICE + '/api/session/recovery', {
         id: sid,
-        setup_required: true
+        setup_required: true,
+        ai: true
     }, {
         headers: { Authorization: `Bearer ${TOKEN}` }
     })
@@ -132,7 +133,6 @@ function FinishTurnCallback(bestMove, value) {
         app.state  = STATE.WAIT;
         axios.post(SERVICE + '/api/move', {
             uid: uid,
-            next_player: (turn == 0) ? 2 : 1,
             move_str: move,
             note: 'value=' + value
         }, {
