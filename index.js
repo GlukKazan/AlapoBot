@@ -58,6 +58,7 @@ function App() {
 let app = new App();
 
 let init = function(app) {
+    console.log('INIT');
     app.state = STATE.WAIT;
     axios.post(SERVICE + '/api/auth/login', {
         username: USERNAME,
@@ -75,7 +76,30 @@ let init = function(app) {
     return true;
 }
 
+let checkTurn = function(app) {
+    app.state = STATE.WAIT;
+    axios.get(SERVICE + '/api/session/current/134', {
+        headers: { Authorization: `Bearer ${TOKEN}` }
+    })
+    .then(function (response) {
+        if (response.data.length > 0) {
+            sid = response.data[0].id;
+            setup = response.data[0].last_setup;
+            app.state = STATE.RECO;
+        } else {
+            app.state = STATE.TURN;
+        }
+    })
+    .catch(function (error) {
+        console.log('TURN ERROR: ' + error);
+        logger.error('TURN ERROR: ' + error);
+        app.state  = STATE.INIT;
+    });
+    return true;
+}
+
 let recovery = function(app) {
+    console.log('RECO');
     app.state = STATE.WAIT;
     axios.post(SERVICE + '/api/session/recovery', {
         id: sid,
@@ -91,28 +115,6 @@ let recovery = function(app) {
     .catch(function (error) {
         console.log('RECO ERROR: ' + error);
         logger.error('RECO ERROR: ' + error);
-        app.state  = STATE.INIT;
-    });
-    return true;
-}
-
-let checkTurn = function(app) {
-    app.state = STATE.WAIT;
-    axios.get(SERVICE + '/api/session/current/134', {
-        headers: { Authorization: `Bearer ${TOKEN}` }
-    })
-    .then(function (response) {
-        if (response.data.length > 0) {
-            sid = response.data[0].id;
-            setup = response.data[0].last_setup;
-            app.state = STATE.RECO;
-        } else {
-            app.state = STATE.INIT;
-        }
-    })
-    .catch(function (error) {
-        console.log('TURN ERROR: ' + error);
-        logger.error('TURN ERROR: ' + error);
         app.state  = STATE.INIT;
     });
     return true;
@@ -149,6 +151,7 @@ function FinishTurnCallback(bestMove, value) {
 }
 
 let sendMove = function(app) {
+    console.log('MOVE');
     app.state  = STATE.WAIT;
     const result = setup.match(/[?&]setup=(.*)/);
     if (result) {
