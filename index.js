@@ -8,11 +8,12 @@ const STATE = {
     INIT: 1,
     TURN: 2,
     RECO: 3,
-    MOVE: 4,
-    STOP: 5
+    GETM: 4,
+    MOVE: 5,
+    STOP: 6
 };
 
-const SERVICE  = 'http://127.0.0.1:3000';
+const SERVICE  = 'http://games.dtco.ru';
 const USERNAME = 'alapo';
 const PASSWORD = 'alapo';
 
@@ -58,7 +59,6 @@ function App() {
 let app = new App();
 
 let init = function(app) {
-    console.log('INIT');
     app.state = STATE.WAIT;
     axios.post(SERVICE + '/api/auth/login', {
         username: USERNAME,
@@ -87,7 +87,7 @@ let checkTurn = function(app) {
             setup = response.data[0].last_setup;
             app.state = STATE.RECO;
         } else {
-            app.state = STATE.TURN;
+            app.state = STATE.INIT;
         }
     })
     .catch(function (error) {
@@ -99,7 +99,6 @@ let checkTurn = function(app) {
 }
 
 let recovery = function(app) {
-    console.log('RECO');
     app.state = STATE.WAIT;
     axios.post(SERVICE + '/api/session/recovery', {
         id: sid,
@@ -121,20 +120,20 @@ let recovery = function(app) {
     return true;
 }
 
-function FinishTurnCallback(bestMove, value) {
+function FinishTurnCallback(bestMove, value, time, ply, fen) {
     if (bestMove != null) {
         let move = garbo.FormatMove(bestMove);
         const result = setup.match(/[?&]turn=(\d+)/);
         if (result) {
             turn = result[1];
         }
-        console.log('move = ' + move + ', value=' + value);
-        logger.info('move = ' + move + ', value=' + value);
+        console.log('move = ' + move + ', value=' + value + ', time = ' + time + ', ply = ' + ply);
+        logger.info('move = ' + move + ', value=' + value + ', time = ' + time + ', ply = ' + ply);
         app.state  = STATE.WAIT;
         axios.post(SERVICE + '/api/move', {
             uid: uid,
             move_str: move,
-            note: 'value=' + value
+            note: 'value=' + value + ', time = ' + time + ', ply = ' + ply
         }, {
             headers: { Authorization: `Bearer ${TOKEN}` }
         })
@@ -151,7 +150,6 @@ function FinishTurnCallback(bestMove, value) {
 }
 
 let sendMove = function(app) {
-    console.log('MOVE');
     app.state  = STATE.WAIT;
     const result = setup.match(/[?&]setup=(.*)/);
     if (result) {
