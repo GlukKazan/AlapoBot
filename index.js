@@ -110,7 +110,7 @@ let recovery = function(app) {
     .then(function (response) {
         console.log(response.data);
         uid = response.data.uid;
-        app.state = STATE.MOVE;
+        app.state = STATE.GETM;
     })
     .catch(function (error) {
         console.log('RECO ERROR: ' + error);
@@ -118,6 +118,32 @@ let recovery = function(app) {
         app.state  = STATE.INIT;
     });
     return true;
+}
+
+let getConfirmed = function(app) {
+    app.state = STATE.WAIT;
+    axios.get(SERVICE + '/api/move/confirmed/' + uid, {
+        headers: { Authorization: `Bearer ${TOKEN}` }
+    })
+    .then(function (response) {
+        app.state = STATE.MOVE;
+    })
+    .catch(function (error) {
+        console.log('GETM ERROR: ' + error);
+        logger.error('GETM ERROR: ' + error);
+        app.state  = STATE.INIT;
+    });
+    return true;
+}
+
+function getSetup(fen) {
+    let r = '?turn=';
+    if (turn == 0) {
+        r += '1;&setup=' + fen;
+    } else {
+        r += '0;&setup=' + fen;
+    }
+    return r;
 }
 
 function FinishTurnCallback(bestMove, value, time, ply, fen) {
@@ -132,7 +158,9 @@ function FinishTurnCallback(bestMove, value, time, ply, fen) {
         app.state  = STATE.WAIT;
         axios.post(SERVICE + '/api/move', {
             uid: uid,
+            next_player: (turn == 0) ? 2 : 1,
             move_str: move,
+            setup_str: getSetup(fen),
             note: 'value=' + value + ', time = ' + time + ', ply = ' + ply
         }, {
             headers: { Authorization: `Bearer ${TOKEN}` }
@@ -184,6 +212,7 @@ app.states[STATE.STOP] = stop;
 app.states[STATE.TURN] = checkTurn;
 app.states[STATE.MOVE] = sendMove;
 app.states[STATE.RECO] = recovery;
+app.states[STATE.GETM] = getConfirmed;
 
 let run = function() {
     if (app.exec()) {
